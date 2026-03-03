@@ -78,35 +78,64 @@ const RegisterScreen = () => {
     }
   };
 
-  const Input = ({ label, name, ...props }: any) => (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        {...props}
-        value={formData[name]}
-        onChangeText={(text) => handleInputChange(name, text)}
-        style={styles.input}
-        placeholderTextColor="#9CA3AF"
-      />
-    </View>
-  );
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Register</Text>
         <Text style={styles.subtitle}>Create your ScanApp account</Text>
 
-        <Input label="Name *" name="name" placeholder="Full Name" />
-        <Input label="Mobile *" name="mobile" placeholder="Mobile Number" keyboardType="phone-pad" />
-        <Input label="Password *" name="password" placeholder="Password" secureTextEntry />
-        <Input label="Center *" name="center" placeholder="Center Name" />
-        <Input label="Address" name="address" placeholder="Full Address" />
-        <Input label="PAN Number" name="panNumber" placeholder="ABCDE1234F" maxLength={10} />
+        <Input
+          label="Name *"
+          value={formData.name}
+          onChangeText={(text: string) => handleInputChange('name', text)}
+          placeholder="Full Name"
+        />
+        <Input
+          label="Mobile *"
+          value={formData.mobile}
+          onChangeText={(text: string) => handleInputChange('mobile', text)}
+          placeholder="Mobile Number"
+          keyboardType="phone-pad"
+        />
+        <Input
+          label="Password *"
+          value={formData.password}
+          onChangeText={(text: string) => handleInputChange('password', text)}
+          placeholder="Password"
+          secureTextEntry
+        />
+        <Input
+          label="Center *"
+          value={formData.center}
+          onChangeText={(text: string) => handleInputChange('center', text)}
+          placeholder="Center Name"
+        />
+        <Input
+          label="Address"
+          value={formData.address}
+          onChangeText={(text: string) => handleInputChange('address', text)}
+          placeholder="Full Address"
+        />
+        <Input
+          label="PAN Number"
+          value={formData.panNumber}
+          onChangeText={(text: string) => handleInputChange('panNumber', text)}
+          placeholder="ABCDE1234F"
+          maxLength={10}
+        />
 
         <Text style={styles.section}>Bank Details (Optional)</Text>
-        <Input label="Account Number" name="accountNo" keyboardType="numeric" />
-        <Input label="IFSC Code" name="ifscCode" />
+        <Input
+          label="Account Number"
+          value={formData.accountNo}
+          onChangeText={(text: string) => handleInputChange('accountNo', text)}
+          keyboardType="numeric"
+        />
+        <Input
+          label="IFSC Code"
+          value={formData.ifscCode}
+          onChangeText={(text: string) => handleInputChange('ifscCode', text)}
+        />
 
         {/* Register Button */}
         <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
@@ -123,6 +152,17 @@ const RegisterScreen = () => {
     </ScrollView>
   );
 };
+
+const Input = ({ label, ...props }: any) => (
+  <View style={styles.field}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      placeholderTextColor="#9CA3AF"
+      {...props}
+    />
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {

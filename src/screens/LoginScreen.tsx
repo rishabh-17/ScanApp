@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 
@@ -20,6 +20,9 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        <View style={styles.logoContainer}>
+          <Image source={require('../assets/compact_logo.png')} style={styles.logo} resizeMode="contain" />
+        </View>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Login to ScanApp</Text>
 
@@ -73,6 +76,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+  },
+
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logo: {
+    width: 80,
+    height: 80,
   },
 
   title: {
