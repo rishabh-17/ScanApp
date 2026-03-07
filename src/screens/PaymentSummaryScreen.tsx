@@ -35,9 +35,10 @@ const PaymentSummaryScreen = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'processed':
       case 'paid':
         return '#10B981'; // Green
+      case 'processed':
+        return '#F59E0B'; // Amber (Pending for user)
       case 'failed':
         return '#EF4444'; // Red
       case 'pending':
@@ -47,12 +48,17 @@ const PaymentSummaryScreen = () => {
     }
   };
 
+  const getDisplayStatus = (status: string) => {
+    if (status === 'processed') return 'PENDING';
+    return status || 'pending';
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.date}>{new Date(item.paymentDate || item.date).toLocaleDateString()}</Text>
         <Text style={[styles.status, { color: getStatusColor(item.status || 'pending') }]}>
-          {(item.status || 'pending').toUpperCase()}
+          {getDisplayStatus(item.status).toUpperCase()}
         </Text>
       </View>
 
