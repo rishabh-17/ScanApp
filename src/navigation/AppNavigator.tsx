@@ -4,9 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import ScanScreen from '../screens/ScanScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import TabNavigator from './TabNavigator';
+import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 
 const Stack = createStackNavigator();
 
@@ -32,28 +31,11 @@ const AppNavigator = () => {
         }}
       >
         {user ? (
-          <>
-            <Stack.Screen
-              name="Scan"
-              component={ScanScreen}
-              options={({ navigation }) => ({
-                title: 'Scan Entry',
-                headerRight: () => (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('Profile')}
-                    style={{ marginRight: 15 }}
-                  >
-                    <Text style={{ color: '#4F46E5', fontWeight: 'bold' }}>Profile</Text>
-                  </TouchableOpacity>
-                ),
-              })}
-            />
-            <Stack.Screen
-              name="Profile"
-              component={ProfileScreen}
-              options={{ title: 'My Profile' }}
-            />
-          </>
+          <Stack.Screen
+            name="Main"
+            component={TabNavigator}
+            options={{ headerShown: false }}
+          />
         ) : (
           <>
             <Stack.Screen

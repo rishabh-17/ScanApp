@@ -11,7 +11,7 @@ try {
 const OFFLINE_QUEUE_KEY = 'offline_scan_queue';
 
 // Replace with your local machine's IP address for Android emulator
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://10.0.2.2:5001/api';
 // For Android Emulator use: 'http://10.0.2.2:5001/api'
 
 export interface ScanEntry {
@@ -34,6 +34,18 @@ export const getScanHistory = async (token: string) => {
     return response.data;
   } catch (error) {
     console.error('Failed to fetch scan history', error);
+    throw error;
+  }
+};
+
+export const getPaymentHistory = async (token: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/payments/my-payments`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch payment history', error);
     throw error;
   }
 };

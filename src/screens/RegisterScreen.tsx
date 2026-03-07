@@ -1,22 +1,52 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+
+// Replace with your local machine's IP address for Android emulator
+const API_URL = 'http://10.0.2.2:5001/api';
 
 const RegisterScreen = () => {
+  const [loading, setLoading] = useState(false);
+  const [centers, setCenters] = useState<any[]>([]);
+  const [showCenterModal, setShowCenterModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
-    password: '',
-    center: '',
+    email: '',
+    dob: '',
     address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    aadhaarNumber: '',
     panNumber: '',
     accountNo: '',
+    confirmAccountNo: '',
     ifscCode: '',
+    bankName: '',
+    accountHolderName: '',
+    center: '',
+    password: '', // Kept for auth
   });
 
   const { register } = useAuth();
   const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    fetchCenters();
+  }, []);
+
+  const fetchCenters = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/centers/public`);
+      setCenters(response.data);
+    } catch (error) {
+      console.error('Failed to fetch centers', error);
+      Alert.alert('Error', 'Failed to load centers');
+    }
+  };
 
   const handleInputChange = (name: string, value: string) => {
     if (name === 'panNumber' || name === 'ifscCode') value = value.toUpperCase();
@@ -24,7 +54,7 @@ const RegisterScreen = () => {
   };
 
   const validateInputs = () => {
-    const { name, mobile, password, center, panNumber, accountNo, ifscCode } = formData;
+    const { name, mobile, password, center, panNumber, accountNo, confirmAccountNo, ifscCode, aadhaarNumber } = formData;
 
     if (!name || !mobile || !password || !center) {
       Alert.alert('Validation Error', 'Please fill all required fields');
@@ -36,6 +66,11 @@ const RegisterScreen = () => {
       return false;
     }
 
+    if (aadhaarNumber && !/^\d{12}$/.test(aadhaarNumber)) {
+      Alert.alert('Validation Error', 'Invalid Aadhaar Number (12 digits)');
+      return false;
+    }
+
     if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
       Alert.alert('Validation Error', 'Invalid PAN format');
       return false;
@@ -43,6 +78,11 @@ const RegisterScreen = () => {
 
     if (accountNo && !/^\d{9,18}$/.test(accountNo)) {
       Alert.alert('Validation Error', 'Invalid account number');
+      return false;
+    }
+
+    if (accountNo !== confirmAccountNo) {
+      Alert.alert('Validation Error', 'Bank Account Numbers do not match');
       return false;
     }
 
@@ -57,17 +97,22 @@ const RegisterScreen = () => {
   const handleRegister = async () => {
     if (!validateInputs()) return;
 
+    setLoading(true);
     try {
-      const { name, mobile, password, center, address, panNumber, accountNo, ifscCode } = formData;
+      // Dummy file uploads for now
+      const dummyDoc = "https://via.placeholder.com/150";
 
       await register({
-        name,
-        mobile,
-        password,
-        center,
-        address,
-        panNumber,
-        bankDetails: { accountNo, ifscCode },
+        ...formData,
+        bankDetails: {
+          accountNo: formData.accountNo,
+          ifscCode: formData.ifscCode,
+          bankName: formData.bankName,
+          accountHolderName: formData.accountHolderName,
+          cancelledChequeDoc: dummyDoc
+        },
+        aadhaarDoc: dummyDoc,
+        panDoc: dummyDoc
       });
 
       Alert.alert('Success', 'Registration submitted. Await admin approval.', [
@@ -75,6 +120,8 @@ const RegisterScreen = () => {
       ]);
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,63 +131,81 @@ const RegisterScreen = () => {
         <Text style={styles.title}>Register</Text>
         <Text style={styles.subtitle}>Create your ScanApp account</Text>
 
-        <Input
-          label="Name *"
-          value={formData.name}
-          onChangeText={(text: string) => handleInputChange('name', text)}
-          placeholder="Full Name"
-        />
-        <Input
-          label="Mobile *"
-          value={formData.mobile}
-          onChangeText={(text: string) => handleInputChange('mobile', text)}
-          placeholder="Mobile Number"
-          keyboardType="phone-pad"
-        />
-        <Input
-          label="Password *"
-          value={formData.password}
-          onChangeText={(text: string) => handleInputChange('password', text)}
-          placeholder="Password"
-          secureTextEntry
-        />
-        <Input
-          label="Center *"
-          value={formData.center}
-          onChangeText={(text: string) => handleInputChange('center', text)}
-          placeholder="Center Name"
-        />
-        <Input
-          label="Address"
-          value={formData.address}
-          onChangeText={(text: string) => handleInputChange('address', text)}
-          placeholder="Full Address"
-        />
-        <Input
-          label="PAN Number"
-          value={formData.panNumber}
-          onChangeText={(text: string) => handleInputChange('panNumber', text)}
-          placeholder="ABCDE1234F"
-          maxLength={10}
-        />
+        <Input label="Full Name *" value={formData.name} onChangeText={(text: string) => handleInputChange('name', text)} placeholder="Full Name" />
+        <Input label="Mobile Number *" value={formData.mobile} onChangeText={(text: string) => handleInputChange('mobile', text)} placeholder="Mobile Number" keyboardType="phone-pad" />
+        <Input label="Email ID" value={formData.email} onChangeText={(text: string) => handleInputChange('email', text)} placeholder="Email ID" keyboardType="email-address" />
+        <Input label="Date of Birth (YYYY-MM-DD)" value={formData.dob} onChangeText={(text: string) => handleInputChange('dob', text)} placeholder="YYYY-MM-DD" />
 
-        <Text style={styles.section}>Bank Details (Optional)</Text>
-        <Input
-          label="Account Number"
-          value={formData.accountNo}
-          onChangeText={(text: string) => handleInputChange('accountNo', text)}
-          keyboardType="numeric"
-        />
-        <Input
-          label="IFSC Code"
-          value={formData.ifscCode}
-          onChangeText={(text: string) => handleInputChange('ifscCode', text)}
-        />
+        <Text style={styles.sectionHeader}>Address Details</Text>
+        <Input label="Address" value={formData.address} onChangeText={(text: string) => handleInputChange('address', text)} placeholder="Address" />
+        <View style={styles.row}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <Input label="City" value={formData.city} onChangeText={(text: string) => handleInputChange('city', text)} placeholder="City" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Input label="State" value={formData.state} onChangeText={(text: string) => handleInputChange('state', text)} placeholder="State" />
+          </View>
+        </View>
+        <Input label="Pincode" value={formData.pincode} onChangeText={(text: string) => handleInputChange('pincode', text)} placeholder="Pincode" keyboardType="numeric" />
+
+        <Text style={styles.sectionHeader}>Identity Details</Text>
+        <Input label="Aadhaar Number" value={formData.aadhaarNumber} onChangeText={(text: string) => handleInputChange('aadhaarNumber', text)} placeholder="12-digit Aadhaar" keyboardType="numeric" maxLength={12} />
+        <Input label="PAN Number" value={formData.panNumber} onChangeText={(text: string) => handleInputChange('panNumber', text)} placeholder="ABCDE1234F" autoCapitalize="characters" maxLength={10} />
+
+        <View style={styles.row}>
+          <TouchableOpacity style={[styles.uploadButton, { flex: 1, marginRight: 8 }]} onPress={() => Alert.alert('Info', 'Aadhaar Uploaded')}>
+            <Text style={styles.uploadButtonText}>Aadhaar Doc</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.uploadButton, { flex: 1 }]} onPress={() => Alert.alert('Info', 'PAN Uploaded')}>
+            <Text style={styles.uploadButtonText}>PAN Doc</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.sectionHeader}>Bank Details</Text>
+        <Input label="Bank Account Number" value={formData.accountNo} onChangeText={(text: string) => handleInputChange('accountNo', text)} placeholder="Account Number" keyboardType="numeric" />
+        <Input label="Confirm Account Number" value={formData.confirmAccountNo} onChangeText={(text: string) => handleInputChange('confirmAccountNo', text)} placeholder="Confirm Account Number" keyboardType="numeric" />
+        <Input label="IFSC Code" value={formData.ifscCode} onChangeText={(text: string) => handleInputChange('ifscCode', text)} placeholder="IFSC Code" autoCapitalize="characters" />
+        <Input label="Bank Name" value={formData.bankName} onChangeText={(text: string) => handleInputChange('bankName', text)} placeholder="Bank Name" />
+        <Input label="Account Holder Name" value={formData.accountHolderName} onChangeText={(text: string) => handleInputChange('accountHolderName', text)} placeholder="Account Holder Name" />
+
+        <TouchableOpacity style={styles.uploadButton} onPress={() => Alert.alert('Info', 'Cheque Uploaded')}>
+          <Text style={styles.uploadButtonText}>Upload Cancelled Cheque</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionHeader}>Account Setup</Text>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Center *</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowCenterModal(true)}
+          >
+            <Text style={{ marginTop: 12, color: formData.center ? '#111827' : '#9CA3AF' }}>
+              {formData.center
+                ? (() => {
+                  const selected = centers.find((c: any) => c._id === formData.center);
+                  return selected ? `${selected.name} (${selected.centerCode})` : formData.center;
+                })()
+                : 'Select Center'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Input label="Password *" value={formData.password} onChangeText={(text: string) => handleInputChange('password', text)} placeholder="Password" secureTextEntry />
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
-          <Text style={styles.registerText}>Register</Text>
+        <TouchableOpacity
+          style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.registerText}>Create Account</Text>
+          )}
         </TouchableOpacity>
+
 
         {/* Login Link */}
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -149,6 +214,40 @@ const RegisterScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={showCenterModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCenterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Center</Text>
+            <FlatList
+              data={centers}
+              keyExtractor={(item: any) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    handleInputChange('center', item._id);
+                    setShowCenterModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item.name} ({item.centerCode})</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCenterModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -191,11 +290,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  section: {
+  sectionHeader: {
     marginTop: 12,
-    marginBottom: 4,
-    fontWeight: '600',
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '700',
     color: '#4F46E5',
+    textTransform: 'uppercase',
+  },
+
+  uploadButton: {
+    backgroundColor: '#E0E7FF',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderStyle: 'dashed',
+  },
+
+  uploadButtonText: {
+    color: '#4F46E5',
+    fontWeight: '500',
+    fontSize: 14,
   },
 
   field: { marginBottom: 14 },
@@ -213,6 +331,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: '#F9FAFB',
+    color: '#111827',
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 0,
   },
 
   registerBtn: {
@@ -238,6 +363,44 @@ const styles = StyleSheet.create({
   link: {
     color: '#4F46E5',
     fontWeight: '600',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalItem: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  closeButton: {
+    marginTop: 16,
+    alignItems: 'center',
+    padding: 12,
+  },
+  closeButtonText: {
+    color: '#EF4444',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 
