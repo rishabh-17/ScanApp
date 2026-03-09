@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getScanHistory, ScanEntry } from '../services/ScanService';
@@ -9,7 +9,7 @@ const WorkSummaryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchScans = async () => {
+  const fetchScans = useCallback(async () => {
     setLoading(true);
     try {
       if (user?.token) {
@@ -22,11 +22,11 @@ const WorkSummaryScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchScans();
-  }, [user]);
+  }, [fetchScans]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -49,28 +49,28 @@ const WorkSummaryScreen = () => {
   };
 
   const renderItem = ({ item }: { item: ScanEntry }) => (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
-        <Text style={[styles.status, { color: getStatusColor(item.status || 'pending') }]}>
+    <View style={screenStyles.card}>
+      <View style={screenStyles.header}>
+        <Text style={screenStyles.date}>{new Date(item.date).toLocaleDateString()}</Text>
+        <Text style={[screenStyles.status, { color: getStatusColor(item.status || 'pending') }]}>
           {(item.status || 'pending').toUpperCase()}
         </Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Project:</Text>
-        <Text style={styles.value}>{item.projectId?.name || item.projectName || 'N/A'}</Text>
+      <View style={screenStyles.row}>
+        <Text style={screenStyles.label}>Project:</Text>
+        <Text style={screenStyles.value}>{item.projectId?.name || item.projectName || 'N/A'}</Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Scans:</Text>
-        <Text style={styles.value}>{item.scans}</Text>
+      <View style={screenStyles.row}>
+        <Text style={screenStyles.label}>Scans:</Text>
+        <Text style={screenStyles.value}>{item.scans}</Text>
       </View>
 
       {item.rejectionReason && (
-        <View style={styles.rejectionBox}>
-          <Text style={styles.rejectionLabel}>Rejection Reason:</Text>
-          <Text style={styles.rejectionText}>{item.rejectionReason}</Text>
+        <View style={screenStyles.rejectionBox}>
+          <Text style={screenStyles.rejectionLabel}>Rejection Reason:</Text>
+          <Text style={screenStyles.rejectionText}>{item.rejectionReason}</Text>
         </View>
       )}
     </View>
@@ -78,35 +78,35 @@ const WorkSummaryScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.center}>
+      <View style={screenStyles.center}>
         <ActivityIndicator size="large" color="#4F46E5" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Work Summary</Text>
-        <TouchableOpacity onPress={fetchScans} style={styles.reloadButton}>
-          <Text style={styles.reloadButtonText}>Reload</Text>
+    <View style={screenStyles.container}>
+      <View style={screenStyles.headerContainer}>
+        <Text style={screenStyles.headerTitle}>Work Summary</Text>
+        <TouchableOpacity onPress={fetchScans} style={screenStyles.reloadButton}>
+          <Text style={screenStyles.reloadButtonText}>Reload</Text>
         </TouchableOpacity>
       </View>
       <FlatList
         data={scans}
         renderItem={renderItem}
         keyExtractor={(item) => item._id || item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={screenStyles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No scan entries found.</Text>
+          <Text style={screenStyles.emptyText}>No scan entries found.</Text>
         }
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const screenStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F4F6',

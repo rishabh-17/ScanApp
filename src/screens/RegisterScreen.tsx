@@ -56,8 +56,8 @@ const RegisterScreen = () => {
   const validateInputs = () => {
     const { name, mobile, password, center, panNumber, accountNo, confirmAccountNo, ifscCode, aadhaarNumber } = formData;
 
-    if (!name || !mobile || !password || !center) {
-      Alert.alert('Validation Error', 'Please fill all required fields');
+    if (!name || !mobile || !password || !center || !aadhaarNumber || !panNumber) {
+      Alert.alert('Validation Error', 'Please fill all required fields (Name, Mobile, Password, Center, Aadhaar, PAN)');
       return false;
     }
 
@@ -66,12 +66,12 @@ const RegisterScreen = () => {
       return false;
     }
 
-    if (aadhaarNumber && !/^\d{12}$/.test(aadhaarNumber)) {
+    if (!/^\d{12}$/.test(aadhaarNumber)) {
       Alert.alert('Validation Error', 'Invalid Aadhaar Number (12 digits)');
       return false;
     }
 
-    if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
       Alert.alert('Validation Error', 'Invalid PAN format');
       return false;
     }
@@ -149,8 +149,8 @@ const RegisterScreen = () => {
         <Input label="Pincode" value={formData.pincode} onChangeText={(text: string) => handleInputChange('pincode', text)} placeholder="Pincode" keyboardType="numeric" />
 
         <Text style={styles.sectionHeader}>Identity Details</Text>
-        <Input label="Aadhaar Number" value={formData.aadhaarNumber} onChangeText={(text: string) => handleInputChange('aadhaarNumber', text)} placeholder="12-digit Aadhaar" keyboardType="numeric" maxLength={12} />
-        <Input label="PAN Number" value={formData.panNumber} onChangeText={(text: string) => handleInputChange('panNumber', text)} placeholder="ABCDE1234F" autoCapitalize="characters" maxLength={10} />
+        <Input label="Aadhaar Number *" value={formData.aadhaarNumber} onChangeText={(text: string) => handleInputChange('aadhaarNumber', text)} placeholder="12-digit Aadhaar" keyboardType="numeric" maxLength={12} />
+        <Input label="PAN Number *" value={formData.panNumber} onChangeText={(text: string) => handleInputChange('panNumber', text)} placeholder="ABCDE1234F" autoCapitalize="characters" maxLength={10} />
 
         <View style={styles.row}>
           <TouchableOpacity style={[styles.uploadButton, { flex: 1, marginRight: 8 }]} onPress={() => Alert.alert('Info', 'Aadhaar Uploaded')}>
