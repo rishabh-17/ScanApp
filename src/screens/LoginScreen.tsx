@@ -12,7 +12,7 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       await login(mobile, password);
-    } catch (error) {
+    } catch {
       Alert.alert('Login Failed', 'Invalid credentials');
     }
   };

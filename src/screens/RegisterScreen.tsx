@@ -12,8 +12,14 @@ const RegisterScreen = () => {
   const [centers, setCenters] = useState<any[]>([]);
   const [showCenterModal, setShowCenterModal] = useState(false);
   const [formData, setFormData] = useState({
+    location: '',
     name: '',
+    gender: '',
+    fatherName: '',
+    motherName: '',
+    bloodGroup: '',
     mobile: '',
+    alternateMobile: '',
     email: '',
     dob: '',
     address: '',
@@ -21,12 +27,24 @@ const RegisterScreen = () => {
     state: '',
     pincode: '',
     aadhaarNumber: '',
+    aadhaarDoc: '',
     panNumber: '',
+    panDoc: '',
     accountNo: '',
     confirmAccountNo: '',
     ifscCode: '',
     bankName: '',
     accountHolderName: '',
+    cancelledChequeDoc: '',
+    bankPassbookDoc: '',
+    passportPhoto: '',
+    educationalDoc: '',
+    highestEducation: '',
+    affiliatedUniversity: '',
+    previousEmployment: '',
+    referenceSource: '',
+    agencyName: '',
+    referenceContactNo: '',
     center: '',
     password: '', // Kept for auth
   });
@@ -54,15 +72,19 @@ const RegisterScreen = () => {
   };
 
   const validateInputs = () => {
-    const { name, mobile, password, center, panNumber, accountNo, confirmAccountNo, ifscCode, aadhaarNumber } = formData;
+    const { name, mobile, alternateMobile, password, center, panNumber, accountNo, confirmAccountNo, ifscCode, aadhaarNumber } = formData;
 
-    if (!name || !mobile || !password || !center || !aadhaarNumber || !panNumber) {
-      Alert.alert('Validation Error', 'Please fill all required fields (Name, Mobile, Password, Center, Aadhaar, PAN)');
+    if (!name || !mobile || !alternateMobile || !password || !center || !aadhaarNumber || !panNumber) {
+      Alert.alert('Validation Error', 'Please fill all required fields (Name, Mobile, Alternate Number, Password, Center, Aadhaar, PAN)');
       return false;
     }
 
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       Alert.alert('Validation Error', 'Please enter a valid 10-digit mobile number');
+      return false;
+    }
+    if (!/^[6-9]\d{9}$/.test(alternateMobile)) {
+      Alert.alert('Validation Error', 'Please enter a valid 10-digit alternate number');
       return false;
     }
 
@@ -99,20 +121,16 @@ const RegisterScreen = () => {
 
     setLoading(true);
     try {
-      // Dummy file uploads for now
-      const dummyDoc = "https://via.placeholder.com/150";
-
       await register({
         ...formData,
+        photo: formData.passportPhoto,
         bankDetails: {
           accountNo: formData.accountNo,
           ifscCode: formData.ifscCode,
           bankName: formData.bankName,
           accountHolderName: formData.accountHolderName,
-          cancelledChequeDoc: dummyDoc
+          cancelledChequeDoc: formData.cancelledChequeDoc
         },
-        aadhaarDoc: dummyDoc,
-        panDoc: dummyDoc
       });
 
       Alert.alert('Success', 'Registration submitted. Await admin approval.', [
@@ -131,18 +149,24 @@ const RegisterScreen = () => {
         <Text style={styles.title}>Register</Text>
         <Text style={styles.subtitle}>Create your ScanApp account</Text>
 
+        <Input label="Location" value={formData.location} onChangeText={(text: string) => handleInputChange('location', text)} placeholder="Location" />
         <Input label="Full Name *" value={formData.name} onChangeText={(text: string) => handleInputChange('name', text)} placeholder="Full Name" />
+        <Input label="Gender" value={formData.gender} onChangeText={(text: string) => handleInputChange('gender', text)} placeholder="Male/Female/Other" />
+        <Input label="Father Name" value={formData.fatherName} onChangeText={(text: string) => handleInputChange('fatherName', text)} placeholder="Father Name" />
+        <Input label="Mother Name" value={formData.motherName} onChangeText={(text: string) => handleInputChange('motherName', text)} placeholder="Mother Name" />
+        <Input label="Blood Group" value={formData.bloodGroup} onChangeText={(text: string) => handleInputChange('bloodGroup', text)} placeholder="A+/O-/etc." />
         <Input label="Mobile Number *" value={formData.mobile} onChangeText={(text: string) => handleInputChange('mobile', text)} placeholder="Mobile Number" keyboardType="phone-pad" />
+        <Input label="Alternate Number *" value={formData.alternateMobile} onChangeText={(text: string) => handleInputChange('alternateMobile', text)} placeholder="Alternate Number" keyboardType="phone-pad" />
         <Input label="Email ID" value={formData.email} onChangeText={(text: string) => handleInputChange('email', text)} placeholder="Email ID" keyboardType="email-address" />
         <Input label="Date of Birth (YYYY-MM-DD)" value={formData.dob} onChangeText={(text: string) => handleInputChange('dob', text)} placeholder="YYYY-MM-DD" />
 
         <Text style={styles.sectionHeader}>Address Details</Text>
         <Input label="Address" value={formData.address} onChangeText={(text: string) => handleInputChange('address', text)} placeholder="Address" />
         <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 8 }}>
+          <View style={styles.halfColLeft}>
             <Input label="City" value={formData.city} onChangeText={(text: string) => handleInputChange('city', text)} placeholder="City" />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={styles.halfColRight}>
             <Input label="State" value={formData.state} onChangeText={(text: string) => handleInputChange('state', text)} placeholder="State" />
           </View>
         </View>
@@ -150,16 +174,9 @@ const RegisterScreen = () => {
 
         <Text style={styles.sectionHeader}>Identity Details</Text>
         <Input label="Aadhaar Number *" value={formData.aadhaarNumber} onChangeText={(text: string) => handleInputChange('aadhaarNumber', text)} placeholder="12-digit Aadhaar" keyboardType="numeric" maxLength={12} />
+        <Input label="Aadhaar Doc URL" value={formData.aadhaarDoc} onChangeText={(text: string) => handleInputChange('aadhaarDoc', text)} placeholder="Aadhaar Doc URL" />
         <Input label="PAN Number *" value={formData.panNumber} onChangeText={(text: string) => handleInputChange('panNumber', text)} placeholder="ABCDE1234F" autoCapitalize="characters" maxLength={10} />
-
-        <View style={styles.row}>
-          <TouchableOpacity style={[styles.uploadButton, { flex: 1, marginRight: 8 }]} onPress={() => Alert.alert('Info', 'Aadhaar Uploaded')}>
-            <Text style={styles.uploadButtonText}>Aadhaar Doc</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.uploadButton, { flex: 1 }]} onPress={() => Alert.alert('Info', 'PAN Uploaded')}>
-            <Text style={styles.uploadButtonText}>PAN Doc</Text>
-          </TouchableOpacity>
-        </View>
+        <Input label="PAN Doc URL" value={formData.panDoc} onChangeText={(text: string) => handleInputChange('panDoc', text)} placeholder="PAN Doc URL" />
 
         <Text style={styles.sectionHeader}>Bank Details</Text>
         <Input label="Bank Account Number" value={formData.accountNo} onChangeText={(text: string) => handleInputChange('accountNo', text)} placeholder="Account Number" keyboardType="numeric" />
@@ -167,10 +184,22 @@ const RegisterScreen = () => {
         <Input label="IFSC Code" value={formData.ifscCode} onChangeText={(text: string) => handleInputChange('ifscCode', text)} placeholder="IFSC Code" autoCapitalize="characters" />
         <Input label="Bank Name" value={formData.bankName} onChangeText={(text: string) => handleInputChange('bankName', text)} placeholder="Bank Name" />
         <Input label="Account Holder Name" value={formData.accountHolderName} onChangeText={(text: string) => handleInputChange('accountHolderName', text)} placeholder="Account Holder Name" />
+        <Input label="Bank Passbook Doc URL" value={formData.bankPassbookDoc} onChangeText={(text: string) => handleInputChange('bankPassbookDoc', text)} placeholder="Bank Passbook Doc URL" />
+        <Input label="Cancelled Cheque Doc URL" value={formData.cancelledChequeDoc} onChangeText={(text: string) => handleInputChange('cancelledChequeDoc', text)} placeholder="Cancelled Cheque Doc URL" />
 
-        <TouchableOpacity style={styles.uploadButton} onPress={() => Alert.alert('Info', 'Cheque Uploaded')}>
-          <Text style={styles.uploadButtonText}>Upload Cancelled Cheque</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionHeader}>Education</Text>
+        <Input label="Highest Education" value={formData.highestEducation} onChangeText={(text: string) => handleInputChange('highestEducation', text)} placeholder="Highest Education" />
+        <Input label="Affiliated University" value={formData.affiliatedUniversity} onChangeText={(text: string) => handleInputChange('affiliatedUniversity', text)} placeholder="Affiliated University" />
+        <Input label="Educational Doc URL" value={formData.educationalDoc} onChangeText={(text: string) => handleInputChange('educationalDoc', text)} placeholder="Educational Doc URL" />
+
+        <Text style={styles.sectionHeader}>Employment / Reference</Text>
+        <Input label="Previous Employment" value={formData.previousEmployment} onChangeText={(text: string) => handleInputChange('previousEmployment', text)} placeholder="Previous Employment (if any)" />
+        <Input label="Reference (Direct Walkin, Agency)" value={formData.referenceSource} onChangeText={(text: string) => handleInputChange('referenceSource', text)} placeholder="Direct Walkin / Agency" />
+        <Input label="If Agency - Agency Name" value={formData.agencyName} onChangeText={(text: string) => handleInputChange('agencyName', text)} placeholder="Agency Name" />
+        <Input label="Reference Contact No" value={formData.referenceContactNo} onChangeText={(text: string) => handleInputChange('referenceContactNo', text)} placeholder="Reference Contact No" keyboardType="phone-pad" />
+
+        <Text style={styles.sectionHeader}>Photo</Text>
+        <Input label="Passport Size Photo URL" value={formData.passportPhoto} onChangeText={(text: string) => handleInputChange('passportPhoto', text)} placeholder="Passport Size Photo URL" />
 
         <Text style={styles.sectionHeader}>Account Setup</Text>
 
@@ -180,7 +209,12 @@ const RegisterScreen = () => {
             style={styles.input}
             onPress={() => setShowCenterModal(true)}
           >
-            <Text style={{ marginTop: 12, color: formData.center ? '#111827' : '#9CA3AF' }}>
+            <Text
+              style={[
+                styles.centerPickerText,
+                formData.center ? styles.centerPickerTextSelected : styles.centerPickerTextPlaceholder,
+              ]}
+            >
               {formData.center
                 ? (() => {
                   const selected = centers.find((c: any) => c._id === formData.center);
@@ -195,7 +229,7 @@ const RegisterScreen = () => {
 
         {/* Register Button */}
         <TouchableOpacity
-          style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+          style={[styles.registerBtn, loading && styles.registerBtnDisabled]}
           onPress={handleRegister}
           disabled={loading}
         >
@@ -339,6 +373,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 0,
   },
+  halfColLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
+  halfColRight: {
+    flex: 1,
+  },
+  centerPickerText: {
+    marginTop: 12,
+  },
+  centerPickerTextSelected: {
+    color: '#111827',
+  },
+  centerPickerTextPlaceholder: {
+    color: '#9CA3AF',
+  },
 
   registerBtn: {
     backgroundColor: '#4F46E5',
@@ -346,6 +396,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 6,
+  },
+  registerBtnDisabled: {
+    opacity: 0.7,
   },
 
   registerText: {

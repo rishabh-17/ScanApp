@@ -1,14 +1,4 @@
-import { MMKV } from 'react-native-mmkv';
 import axios from 'axios';
-
-let storage: MMKV | undefined;
-try {
-  storage = new MMKV();
-} catch (e) {
-  console.error('Failed to initialize MMKV in ScanService:', e);
-}
-
-const OFFLINE_QUEUE_KEY = 'offline_scan_queue';
 
 // Replace with your local machine's IP address for Android emulator
 const API_URL = 'http://3.25.120.212:5001/api';

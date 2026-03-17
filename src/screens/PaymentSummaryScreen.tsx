@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { getPaymentHistory } from '../services/ScanService';
@@ -9,7 +9,7 @@ const PaymentSummaryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
       if (user?.token) {
@@ -22,11 +22,11 @@ const PaymentSummaryScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user?.token]);
 
   useEffect(() => {
     fetchPayments();
-  }, [user]);
+  }, [fetchPayments]);
 
   const onRefresh = () => {
     setRefreshing(true);
