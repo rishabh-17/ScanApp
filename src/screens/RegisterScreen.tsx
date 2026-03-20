@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity,
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import { pick, types, errorCodes, isErrorWithCode } from '@react-native-documents/picker';
 
 // Replace with your local machine's IP address for Android emulator
 const API_URL = 'http://3.25.120.212:5001/api';
@@ -11,6 +12,21 @@ const RegisterScreen = () => {
   const [loading, setLoading] = useState(false);
   const [centers, setCenters] = useState<any[]>([]);
   const [showCenterModal, setShowCenterModal] = useState(false);
+  const [pickedDocs, setPickedDocs] = useState<{
+    aadhaarDoc: any | null;
+    panDoc: any | null;
+    bankPassbookDoc: any | null;
+    cancelledChequeDoc: any | null;
+    educationalDoc: any | null;
+    passportPhoto: any | null;
+  }>({
+    aadhaarDoc: null,
+    panDoc: null,
+    bankPassbookDoc: null,
+    cancelledChequeDoc: null,
+    educationalDoc: null,
+    passportPhoto: null,
+  });
   const [formData, setFormData] = useState({
     location: '',
     name: '',
@@ -69,6 +85,18 @@ const RegisterScreen = () => {
   const handleInputChange = (name: string, value: string) => {
     if (name === 'panNumber' || name === 'ifscCode') value = value.toUpperCase();
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handlePickDoc = async (key: keyof typeof pickedDocs, options?: { imageOnly?: boolean }) => {
+    try {
+      const type = options?.imageOnly ? [types.images] : [types.images, types.pdf];
+      const [result] = await pick({ type });
+      setPickedDocs(prev => ({ ...prev, [key]: result }));
+      handleInputChange(key, result?.name || '');
+    } catch (e: any) {
+      if (isErrorWithCode(e) && e.code === errorCodes.OPERATION_CANCELED) return;
+      Alert.alert('Error', 'Failed to select file');
+    }
   };
 
   const validateInputs = () => {
@@ -174,9 +202,17 @@ const RegisterScreen = () => {
 
         <Text style={styles.sectionHeader}>Identity Details</Text>
         <Input label="Aadhaar Number *" value={formData.aadhaarNumber} onChangeText={(text: string) => handleInputChange('aadhaarNumber', text)} placeholder="12-digit Aadhaar" keyboardType="numeric" maxLength={12} />
-        <Input label="Aadhaar Doc URL" value={formData.aadhaarDoc} onChangeText={(text: string) => handleInputChange('aadhaarDoc', text)} placeholder="Aadhaar Doc URL" />
+        <UploadField
+          label="Aadhaar Doc"
+          value={pickedDocs.aadhaarDoc?.name || ''}
+          onPress={() => handlePickDoc('aadhaarDoc')}
+        />
         <Input label="PAN Number *" value={formData.panNumber} onChangeText={(text: string) => handleInputChange('panNumber', text)} placeholder="ABCDE1234F" autoCapitalize="characters" maxLength={10} />
-        <Input label="PAN Doc URL" value={formData.panDoc} onChangeText={(text: string) => handleInputChange('panDoc', text)} placeholder="PAN Doc URL" />
+        <UploadField
+          label="PAN Doc"
+          value={pickedDocs.panDoc?.name || ''}
+          onPress={() => handlePickDoc('panDoc')}
+        />
 
         <Text style={styles.sectionHeader}>Bank Details</Text>
         <Input label="Bank Account Number" value={formData.accountNo} onChangeText={(text: string) => handleInputChange('accountNo', text)} placeholder="Account Number" keyboardType="numeric" />
@@ -184,13 +220,25 @@ const RegisterScreen = () => {
         <Input label="IFSC Code" value={formData.ifscCode} onChangeText={(text: string) => handleInputChange('ifscCode', text)} placeholder="IFSC Code" autoCapitalize="characters" />
         <Input label="Bank Name" value={formData.bankName} onChangeText={(text: string) => handleInputChange('bankName', text)} placeholder="Bank Name" />
         <Input label="Account Holder Name" value={formData.accountHolderName} onChangeText={(text: string) => handleInputChange('accountHolderName', text)} placeholder="Account Holder Name" />
-        <Input label="Bank Passbook Doc URL" value={formData.bankPassbookDoc} onChangeText={(text: string) => handleInputChange('bankPassbookDoc', text)} placeholder="Bank Passbook Doc URL" />
-        <Input label="Cancelled Cheque Doc URL" value={formData.cancelledChequeDoc} onChangeText={(text: string) => handleInputChange('cancelledChequeDoc', text)} placeholder="Cancelled Cheque Doc URL" />
+        <UploadField
+          label="Bank Passbook"
+          value={pickedDocs.bankPassbookDoc?.name || ''}
+          onPress={() => handlePickDoc('bankPassbookDoc')}
+        />
+        <UploadField
+          label="Cancelled Cheque"
+          value={pickedDocs.cancelledChequeDoc?.name || ''}
+          onPress={() => handlePickDoc('cancelledChequeDoc')}
+        />
 
         <Text style={styles.sectionHeader}>Education</Text>
         <Input label="Highest Education" value={formData.highestEducation} onChangeText={(text: string) => handleInputChange('highestEducation', text)} placeholder="Highest Education" />
         <Input label="Affiliated University" value={formData.affiliatedUniversity} onChangeText={(text: string) => handleInputChange('affiliatedUniversity', text)} placeholder="Affiliated University" />
-        <Input label="Educational Doc URL" value={formData.educationalDoc} onChangeText={(text: string) => handleInputChange('educationalDoc', text)} placeholder="Educational Doc URL" />
+        <UploadField
+          label="Educational Doc"
+          value={pickedDocs.educationalDoc?.name || ''}
+          onPress={() => handlePickDoc('educationalDoc')}
+        />
 
         <Text style={styles.sectionHeader}>Employment / Reference</Text>
         <Input label="Previous Employment" value={formData.previousEmployment} onChangeText={(text: string) => handleInputChange('previousEmployment', text)} placeholder="Previous Employment (if any)" />
@@ -199,7 +247,11 @@ const RegisterScreen = () => {
         <Input label="Reference Contact No" value={formData.referenceContactNo} onChangeText={(text: string) => handleInputChange('referenceContactNo', text)} placeholder="Reference Contact No" keyboardType="phone-pad" />
 
         <Text style={styles.sectionHeader}>Photo</Text>
-        <Input label="Passport Size Photo URL" value={formData.passportPhoto} onChangeText={(text: string) => handleInputChange('passportPhoto', text)} placeholder="Passport Size Photo URL" />
+        <UploadField
+          label="Passport Size Photo"
+          value={pickedDocs.passportPhoto?.name || ''}
+          onPress={() => handlePickDoc('passportPhoto', { imageOnly: true })}
+        />
 
         <Text style={styles.sectionHeader}>Account Setup</Text>
 
@@ -294,6 +346,15 @@ const Input = ({ label, ...props }: any) => (
       placeholderTextColor="#9CA3AF"
       {...props}
     />
+  </View>
+);
+
+const UploadField = ({ label, value, onPress }: { label: string; value: string; onPress: () => void }) => (
+  <View style={styles.field}>
+    <Text style={styles.label}>{label}</Text>
+    <TouchableOpacity style={styles.uploadButton} onPress={onPress}>
+      <Text style={styles.uploadButtonText}>{value ? value : 'Upload'}</Text>
+    </TouchableOpacity>
   </View>
 );
 
