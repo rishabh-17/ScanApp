@@ -23,3 +23,7 @@ jestObject.mock('@react-native-documents/picker', () => {
     isErrorWithCode: () => true,
   };
 });
+
+jestObject.mock('@react-native-community/datetimepicker', () => {
+  return () => null;
+});

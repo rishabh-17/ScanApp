@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator, Modal, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator, Modal, FlatList, Platform } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { pick, types, errorCodes, isErrorWithCode } from '@react-native-documents/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Replace with your local machine's IP address for Android emulator
 const API_URL = 'http://3.25.120.212:5001/api';
@@ -12,6 +13,9 @@ const RegisterScreen = () => {
   const [loading, setLoading] = useState(false);
   const [centers, setCenters] = useState<any[]>([]);
   const [showCenterModal, setShowCenterModal] = useState(false);
+  const [showGenderModal, setShowGenderModal] = useState(false);
+  const [showBloodGroupModal, setShowBloodGroupModal] = useState(false);
+  const [showDobPicker, setShowDobPicker] = useState(false);
   const [pickedDocs, setPickedDocs] = useState<{
     aadhaarDoc: any | null;
     panDoc: any | null;
@@ -68,6 +72,9 @@ const RegisterScreen = () => {
   const { register } = useAuth();
   const navigation = useNavigation<any>();
 
+  const genderOptions = ['Male', 'Female', 'Other'];
+  const bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
   useEffect(() => {
     fetchCenters();
   }, []);
@@ -85,6 +92,18 @@ const RegisterScreen = () => {
   const handleInputChange = (name: string, value: string) => {
     if (name === 'panNumber' || name === 'ifscCode') value = value.toUpperCase();
     setFormData({ ...formData, [name]: value });
+  };
+
+  const formatDate = (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseDob = (dob: string) => {
+    const parsed = new Date(dob);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   };
 
   const handlePickDoc = async (key: keyof typeof pickedDocs, options?: { imageOnly?: boolean }) => {
@@ -179,14 +198,71 @@ const RegisterScreen = () => {
 
         <Input label="Location" value={formData.location} onChangeText={(text: string) => handleInputChange('location', text)} placeholder="Location" />
         <Input label="Full Name *" value={formData.name} onChangeText={(text: string) => handleInputChange('name', text)} placeholder="Full Name" />
-        <Input label="Gender" value={formData.gender} onChangeText={(text: string) => handleInputChange('gender', text)} placeholder="Male/Female/Other" />
+        <View style={styles.field}>
+          <Text style={styles.label}>Gender</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowGenderModal(true)}
+          >
+            <Text
+              style={[
+                styles.centerPickerText,
+                formData.gender ? styles.centerPickerTextSelected : styles.centerPickerTextPlaceholder,
+              ]}
+            >
+              {formData.gender ? formData.gender : 'Select Gender'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <Input label="Father Name" value={formData.fatherName} onChangeText={(text: string) => handleInputChange('fatherName', text)} placeholder="Father Name" />
         <Input label="Mother Name" value={formData.motherName} onChangeText={(text: string) => handleInputChange('motherName', text)} placeholder="Mother Name" />
-        <Input label="Blood Group" value={formData.bloodGroup} onChangeText={(text: string) => handleInputChange('bloodGroup', text)} placeholder="A+/O-/etc." />
+        <View style={styles.field}>
+          <Text style={styles.label}>Blood Group</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowBloodGroupModal(true)}
+          >
+            <Text
+              style={[
+                styles.centerPickerText,
+                formData.bloodGroup ? styles.centerPickerTextSelected : styles.centerPickerTextPlaceholder,
+              ]}
+            >
+              {formData.bloodGroup ? formData.bloodGroup : 'Select Blood Group'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <Input label="Mobile Number *" value={formData.mobile} onChangeText={(text: string) => handleInputChange('mobile', text)} placeholder="Mobile Number" keyboardType="phone-pad" />
         <Input label="Alternate Number *" value={formData.alternateMobile} onChangeText={(text: string) => handleInputChange('alternateMobile', text)} placeholder="Alternate Number" keyboardType="phone-pad" />
         <Input label="Email ID" value={formData.email} onChangeText={(text: string) => handleInputChange('email', text)} placeholder="Email ID" keyboardType="email-address" />
-        <Input label="Date of Birth (YYYY-MM-DD)" value={formData.dob} onChangeText={(text: string) => handleInputChange('dob', text)} placeholder="YYYY-MM-DD" />
+        <View style={styles.field}>
+          <Text style={styles.label}>Date of Birth</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowDobPicker(true)}
+          >
+            <Text
+              style={[
+                styles.centerPickerText,
+                formData.dob ? styles.centerPickerTextSelected : styles.centerPickerTextPlaceholder,
+              ]}
+            >
+              {formData.dob ? formData.dob : 'Select Date'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {showDobPicker && (
+          <DateTimePicker
+            value={parseDob(formData.dob)}
+            mode="date"
+            display="default"
+            onChange={(event: any, selectedDate?: Date) => {
+              if (Platform.OS === 'android') setShowDobPicker(false);
+              if (event?.type === 'dismissed') return;
+              if (selectedDate) handleInputChange('dob', formatDate(selectedDate));
+            }}
+          />
+        )}
 
         <Text style={styles.sectionHeader}>Address Details</Text>
         <Input label="Address" value={formData.address} onChangeText={(text: string) => handleInputChange('address', text)} placeholder="Address" />
@@ -328,6 +404,74 @@ const RegisterScreen = () => {
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowCenterModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showGenderModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowGenderModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Gender</Text>
+            <FlatList
+              data={genderOptions}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    handleInputChange('gender', item);
+                    setShowGenderModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowGenderModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showBloodGroupModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowBloodGroupModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Blood Group</Text>
+            <FlatList
+              data={bloodGroupOptions}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    handleInputChange('bloodGroup', item);
+                    setShowBloodGroupModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowBloodGroupModal(false)}
             >
               <Text style={styles.closeButtonText}>Cancel</Text>
             </TouchableOpacity>
