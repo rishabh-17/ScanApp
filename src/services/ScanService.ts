@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Replace with your local machine's IP address for Android emulator
-const API_URL = 'http://3.25.120.212:5001/api';
+const API_URL = 'https://scan-app-ukcg.onrender.com/api';
 // For Android Emulator use: 'http://10.0.2.2:5001/api'
 
 export interface ScanEntry {
